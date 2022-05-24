@@ -1,0 +1,39 @@
+{
+  "name": "mppark-image-carousel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:taichunmin/mppark-image-carousel.git",
+  "author": "taichunmin <taichunmin@gmail.com>",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --ext .js,.pug --fix .",
+    "start": "cross-env DEBUG=app:* node ./bin/www.js"
+  },
+  "dependencies": {
+    "axios": "~0.27.2",
+    "cookie-parser": "~1.4.4",
+    "cross-env": "^7.0.3",
+    "debug": "~2.6.9",
+    "dotenv": "~16.0.1",
+    "express": "~4.18.1",
+    "http-errors": "~1.6.3",
+    "jstransformer-sass": "^1.0.0",
+    "lodash": "~4.17.21",
+    "morgan": "~1.9.1",
+    "papaparse": "~5.3.2",
+    "pug": "~3.0.2",
+    "socket.io": "^4.5.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.16.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-pug": "^1.2.4"
+  },
+  "resolutions": {
+    "**/jstransformer-scss": "taichunmin/jstransformer-scss"
+  }
+}

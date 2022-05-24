@@ -1,0 +1,114 @@
+extends layout-vue
+
+block beforehtml
+  - const title = '照片輪播'
+
+block style
+
+block content
+  #app.my-3.text-monospace(v-cloak)
+    template(v-if="ctxCarousel.imgUrl")
+      .container-fluid.mb-3.d-flex.justify-content-center.align-items-center(ref="img", @click="btnFullScreen")
+        img.w-100(:src="ctxCarousel.imgUrl", :key="ctxCarousel.imgUrl")
+      .container
+        button.mb-3.btn.btn-lg.btn-primary.btn-block(type="button", @click="btnFetchImages") #[i.fa.fa-refresh.mr-2]重新讀取圖片列表
+        .input-group.input-group-lg
+          .input-group-prepend: button.btn.btn-outline-success(type="button", @click="btnOffsetImg(-1)") #[i.fa.fa-arrow-left.mr-2]上一張
+          input.form-control.text-center(readonly, :value="`${(ctxCarousel.imgId ?? 0) + 1}/${ctxCarousel.imgLen}`", @click="btnSetNewImgId")
+          .input-group-append: button.btn.btn-outline-success(type="button", @click="btnOffsetImg(1)") 下一張#[i.fa.fa-arrow-right.ml-2]
+
+block script
+  script.
+    window.vm = new Vue({
+      el: '#app',
+      data: {
+        ctxCarousel: {},
+      },
+      async mounted () {
+        await this.init()
+      },
+      methods: {
+        async init () {
+          try {
+            this.showLoading('請稍候', '讀取資料中')
+            window.socket = window.io() // 初始化 socket.io
+            window.socket.on('state.carousel', ctxCarousel => {
+              this.$set(this, 'ctxCarousel', ctxCarousel)
+            })
+            Swal.close()
+          } catch (err) {
+            console.error(err)
+            await Swal.fire({ icon: 'error', title: '發生錯誤', text: err.message })
+            location.reload()
+          }
+        },
+        async btnFetchImages () {
+          try {
+            this.showLoading('請稍候', '更新圖片列表')
+            const { socket } = window
+            await new Promise((resolve, reject) => {
+              socket.emit('cmd.carousel.fetchImages', (data, err) => err ? reject(new Error(err)) : resolve(data))
+            })
+            await Swal.fire({ icon: 'success', title: '更新成功' })
+          } catch (err) {
+            console.error(err)
+            await Swal.fire({ icon: 'error', title: '更新失敗', text: err.message })
+          }
+        },
+        async btnOffsetImg (offset) {
+          try {
+            this.showLoading('請稍候', '切換圖片中')
+            const { socket } = window
+            await new Promise((resolve, reject) => {
+              socket.emit('cmd.carousel.offsetImg', offset, (data, err) => err ? reject(new Error(err)) : resolve(data))
+            })
+            Swal.close()
+          } catch (err) {
+            console.error(err)
+            await Swal.fire({ icon: 'error', title: '切換失敗', text: err.message })
+          }
+        },
+        async btnSetNewImgId () {
+          try {
+            const result = await Swal.fire({
+              input: 'range',
+              inputLabel: `範圍: 1 ~ ${this.ctxCarousel.imgLen}`,
+              inputValue: this.ctxCarousel.imgId,
+              title: '請輸入新的圖片編號',
+              inputAttributes: {
+                max: this.ctxCarousel.imgLen,
+                min: 1,
+                step: 1,
+              },
+            })
+            if (!result.isConfirmed) return
+            this.showLoading('請稍候', '切換圖片中')
+            const { socket } = window
+            const imgId = _.toSafeInteger(result.value)
+            await new Promise((resolve, reject) => {
+              socket.emit('cmd.carousel.setNewImgId', imgId, (data, err) => err ? reject(new Error(err)) : resolve(data))
+            })
+            Swal.close()
+          } catch (err) {
+            console.error(err)
+            await Swal.fire({ icon: 'error', title: '切換失敗', text: err.message })
+          }
+        },
+        async btnFullScreen () {
+          const dom = this.$refs.img
+          for (const fn of ['requestFullscreen', 'msRequestFullscreen', 'mozRequestFullScreen', 'webkitRequestFullscreen']) {
+            if (!dom[fn]) continue
+            dom[fn]()
+          }
+        },
+        showLoading (title, text) {
+          Swal.fire({
+            title,
+            text,
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => Swal.showLoading(),
+          })
+        },
+      },
+    })
