@@ -19,6 +19,7 @@ block content
 
 block script
   script.
+    window.sleep = t => new Promise(resolve => setTimeout(resolve, t))
     window.vm = new Vue({
       el: '#app',
       data: {
@@ -35,6 +36,7 @@ block script
             window.socket.on('state.carousel', ctxCarousel => {
               this.$set(this, 'ctxCarousel', ctxCarousel)
             })
+            this.keepAlive() // no wait
             Swal.close()
           } catch (err) {
             console.error(err)
@@ -73,7 +75,7 @@ block script
             const result = await Swal.fire({
               input: 'range',
               inputLabel: `範圍: 1 ~ ${this.ctxCarousel.imgLen}`,
-              inputValue: this.ctxCarousel.imgId,
+              inputValue: this.ctxCarousel.imgId + 1,
               title: '請輸入新的圖片編號',
               inputAttributes: {
                 max: this.ctxCarousel.imgLen,
@@ -84,7 +86,7 @@ block script
             if (!result.isConfirmed) return
             this.showLoading('請稍候', '切換圖片中')
             const { socket } = window
-            const imgId = _.toSafeInteger(result.value)
+            const imgId = _.toSafeInteger(result.value) - 1
             await new Promise((resolve, reject) => {
               socket.emit('cmd.carousel.setNewImgId', imgId, (data, err) => err ? reject(new Error(err)) : resolve(data))
             })
@@ -99,6 +101,17 @@ block script
           for (const fn of ['requestFullscreen', 'msRequestFullscreen', 'mozRequestFullScreen', 'webkitRequestFullscreen']) {
             if (!dom[fn]) continue
             dom[fn]()
+          }
+        },
+        async keepAlive () {
+          while (true) {
+            try {
+              await window.sleep(6e4) // 60s
+              await axios.get('/keep-alive')
+            } catch (err) {
+              err.message = err?.response?.data?.message ?? err.message
+              console.error(err)
+            }
           }
         },
         showLoading (title, text) {
