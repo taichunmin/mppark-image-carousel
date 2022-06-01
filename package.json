@@ -5,6 +5,9 @@
   "repository": "git@github.com:taichunmin/mppark-image-carousel.git",
   "author": "taichunmin <taichunmin@gmail.com>",
   "private": true,
+  "engines": {
+    "node": "16.x"
+  },
   "scripts": {
     "lint": "eslint --ext .js,.pug --fix .",
     "start": "cross-env DEBUG=app:* node ./bin/www.js"
